@@ -29,6 +29,8 @@ Examples:
 	$ smug start blog:win1,win2
 	$ smug stop blog
 	$ smug start blog --attach
+	$ smug create blog
+	$ smug edit blog
 `, version, FileUsage, WindowsUsage, AttachUsage, DebugUsage)
 
 func main() {
@@ -56,7 +58,7 @@ func main() {
 	}
 
 	f, err := ioutil.ReadFile(configPath)
-	if err != nil {
+	if options.Command != CommandCreate && err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}
@@ -79,7 +81,7 @@ func main() {
 
 	commander := DefaultCommander{logger}
 	tmux := Tmux{commander}
-	smug := Smug{tmux, commander}
+	smug := Smug{tmux, commander, configPath}
 
 	context := CreateContext()
 
@@ -95,6 +97,10 @@ func main() {
 			fmt.Println("Oops, an error occurred! Rolling back...")
 			smug.Stop(*config, options, context)
 		}
+	case CommandCreate:
+		err = smug.Create()
+	case CommandEdit:
+		err = smug.Edit()
 	case CommandStop:
 		if len(options.Windows) == 0 {
 			fmt.Println("Terminating session...")

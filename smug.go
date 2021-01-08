@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -31,8 +32,9 @@ func Contains(slice []string, s string) bool {
 }
 
 type Smug struct {
-	tmux      Tmux
-	commander Commander
+	tmux       Tmux
+	commander  Commander
+	configPath string
 }
 
 func (smug Smug) execShellCommands(commands []string, path string) error {
@@ -55,6 +57,45 @@ func (smug Smug) switchOrAttach(sessionName string, attach bool, insideTmuxSessi
 		return smug.tmux.Attach(sessionName, os.Stdin, os.Stdout, os.Stderr)
 	}
 	return nil
+}
+
+func IsFileExists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
+}
+
+func (smug Smug) Create() error {
+	exists, err := IsFileExists(smug.configPath)
+	if err != nil {
+		return err
+	}
+	if exists {
+		return errors.New("File already exists")
+	}
+	file, err := os.Create(smug.configPath)
+	defer file.Close()
+	return err
+}
+
+func (smug Smug) Edit() error {
+	editor := os.Getenv("EDITOR")
+	if editor == "" {
+		editor = "vim"
+	}
+
+	cmd := exec.Command(editor, smug.configPath)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+
+	return err
 }
 
 func (smug Smug) Stop(config Config, options Options, context Context) error {
