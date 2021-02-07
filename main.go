@@ -84,7 +84,7 @@ func main() {
 
 		err = smug.Start(config, options, context)
 		if err != nil {
-			fmt.Println("Oops, an error occurred! Rolling back...")
+			fmt.Println(err)
 			smug.Stop(config, options, context)
 			os.Exit(1)
 		}

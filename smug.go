@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -104,8 +105,10 @@ func (smug Smug) Start(config Config, options Options, context Context) error {
 		return smug.switchOrAttach(sessionName, attach, context.InsideTmuxSession)
 	}
 
-	for _, w := range config.Windows {
-		if (len(windows) == 0 && w.Manual) || (len(windows) > 0 && !Contains(windows, w.Name)) {
+	for wi, w := range config.Windows {
+		wName := w.Name + fmt.Sprintf("idx%d", wi)
+
+		if (len(windows) == 0 && w.Manual) || (len(windows) > 0 && !Contains(windows, wName)) {
 			continue
 		}
 
@@ -114,8 +117,8 @@ func (smug Smug) Start(config Config, options Options, context Context) error {
 			windowRoot = filepath.Join(sessionRoot, w.Root)
 		}
 
-		window := sessionName + w.Name
-		_, err := smug.tmux.NewWindow(sessionName, w.Name, windowRoot)
+		window := sessionName + wName
+		_, err := smug.tmux.NewWindow(sessionName, wName, windowRoot)
 		if err != nil {
 			return err
 		}
@@ -132,7 +135,7 @@ func (smug Smug) Start(config Config, options Options, context Context) error {
 			layout = EvenHorizontal
 		}
 
-		_, err = smug.tmux.SelectLayout(sessionName+w.Name, layout)
+		_, err = smug.tmux.SelectLayout(sessionName+wName, layout)
 		if err != nil {
 			return err
 		}
@@ -144,6 +147,7 @@ func (smug Smug) Start(config Config, options Options, context Context) error {
 				paneRoot = filepath.Join(windowRoot, p.Root)
 			}
 
+			fmt.Println("wlp", window+lastPane)
 			newPane, err := smug.tmux.SplitWindow(window+"."+lastPane, p.Type, paneRoot)
 			if err != nil {
 				return err

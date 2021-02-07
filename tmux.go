@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 )
@@ -79,6 +80,7 @@ func (tmux Tmux) SplitWindow(target string, splitType string, root string) (stri
 	args = append(args, []string{"-t", target, "-c", root, "-F", "#{pane_id}"}...)
 
 	cmd := exec.Command("tmux", args...)
+	fmt.Printf("%+v\n", cmd)
 
 	pane, err := tmux.commander.Exec(cmd)
 	if err != nil {
