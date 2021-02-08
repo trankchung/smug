@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -131,11 +132,6 @@ func (smug Smug) Start(config Config, options Options, context Context) error {
 			layout = EvenHorizontal
 		}
 
-		_, err = smug.tmux.SelectLayout(window, layout)
-		if err != nil {
-			return err
-		}
-
 		for _, p := range w.Panes {
 			paneRoot := ExpandPath(p.Root)
 			if paneRoot == "" || !filepath.IsAbs(p.Root) {
@@ -154,6 +150,13 @@ func (smug Smug) Start(config Config, options Options, context Context) error {
 				}
 			}
 		}
+
+		fmt.Println("window:", window, "layout:", layout)
+		_, err = smug.tmux.SelectLayout(window, layout)
+		if err != nil {
+			return err
+		}
+
 	}
 
 	smug.tmux.KillWindow(sessionName + defaultWindowName)
